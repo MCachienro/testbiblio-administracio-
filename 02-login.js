@@ -2,35 +2,46 @@
 const { BaseTest } = require("./BaseTest.js")
 const { By, until } = require("selenium-webdriver");
 const assert = require('assert');
-
-// heredem una classe amb un sol mètode test()
-// emprem this.driver per utilitzar Selenium
-
-
+ 
+//.env
+require('dotenv').config()
+console.log(process.env)
+ 
 class MyTest extends BaseTest
 {
-	async test() {
-        // login test
+    async test() {
+        // Login test
         //////////////////////////////////////////////////////
-
-        await this.driver.get("http://emieza.ieti.site/admin/login/");
-
-        // Localitzem el camp de text "Username" i "Password"
-        const usernameField = await this.driver.findElement(By.name("username"));
-        const passwordField = await this.driver.findElement(By.name("password"));
-
-        // Verifiquem que els camps existeixen
-        assert(usernameField !== null, "El camp Username no es troba.");
-        assert(passwordField !== null, "El camp Password no es troba.");
-
+        var site = process.env.URL
+        var driver = this.driver
+        await driver.get(site+"/admin/login/");
+ 
+        // 1 cercar login box
+        let usernameInput = await driver.wait(until.elementLocated(By.id('id_username')), 10000);
+        let passwordInput = await driver.wait(until.elementLocated(By.id('id_password')), 10000);
+ 
+        // 2 posar usuari i pass
+        usernameInput.sendKeys(process.env.USUARI)
+        passwordInput.sendKeys(process.env.CONTRASENYA)
+ 
+        // 3 boto send .click()
+        let sendButton = await driver.wait(until.elementLocated(By.css('input[value="Iniciar sessió"]')), 10000);
+        sendButton.click()
+ 
+        // 4 comprovem que hem entrat
+        let logoutButton = await driver.wait(until.elementLocated(By.xpath('//button[@type="submit"]')), 10000);
+        var currentLogoutText = await logoutButton.getText();
+        var expectedText = "FINALITZAR SESSIÓ";
+        assert( currentLogoutText==expectedText, "Login fallit.\n\tTEXT TROBAT="+currentLogoutText+"\n\tTEXT ESPERAT="+expectedText);
+ 
         console.log("TEST OK");
-	}
+    }
 }
-
+ 
 // executem el test
-
+ 
 (async function test_example() {
-	const test = new MyTest();
-	await test.run();
-	console.log("END")
+    const test = new MyTest();
+    await test.run();
+    console.log("END")
 })();
